@@ -28,77 +28,127 @@
         <article>
             <pre class="prettyprint source linenums"><code>/**
  * @file Aggregates multiple CalendarBlocks to form the full calendar.
- * @author Megan Pham
+ * @author Megan Pham, Andy Goh
  */
-import React, { Component } from "react";
+import React from "react";
 import CalendarBlock from "./CalendarBlock";
+import { useLocation } from "react-router-dom";
 
-class CalendarList extends Component {
-  currYear = new Date().getFullYear();
-  render() {
-    return (
-      &lt;div>
-        &lt;div className="CalendarRow">
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Fall " + new Date(new Date().setFullYear(this.currYear)).getFullYear()
-            }>
-          &lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Winter " + new Date(new Date().setFullYear(this.currYear + 1)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Spring " + new Date(new Date().setFullYear(this.currYear + 1)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Summer " + new Date(new Date().setFullYear(this.currYear + 1)).getFullYear()}
-          >&lt;/CalendarBlock>
-        &lt;/div>
 
-        &lt;div className="CalendarRow">
-          &lt;CalendarBlock color="#8BB8E8"
-            calendarDate={"Fall " + new Date(new Date().setFullYear(this.currYear + 1)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#8BB8E8"
-            calendarDate={"Winter " + new Date(new Date().setFullYear(this.currYear + 2)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#8BB8E8"
-            calendarDate={"Spring " + new Date(new Date().setFullYear(this.currYear + 2)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#8BB8E8"
-            calendarDate={"Summer " + new Date(new Date().setFullYear(this.currYear + 2)).getFullYear()}
-          >&lt;/CalendarBlock>
-        &lt;/div>
+function CalendarList() {
+  const location = useLocation();
+  const data = location.state;
 
-        &lt;div className="CalendarRow">
-          &lt;CalendarBlock color="#FFE9AD"
-            calendarDate={"Fall " + new Date(new Date().setFullYear(this.currYear + 2)).getFullYear()}>&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#FFE9AD"
-            calendarDate={"Winter " + new Date(new Date().setFullYear(this.currYear + 3)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#FFE9AD"
-            calendarDate={"Spring " + new Date(new Date().setFullYear(this.currYear + 3)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#FFE9AD"
-            calendarDate={"Summer " + new Date(new Date().setFullYear(this.currYear + 3)).getFullYear()}
-          >&lt;/CalendarBlock>
-        &lt;/div>
+  const parse_json = () => {
+    let parsedInput = data;
 
-        &lt;div className="CalendarRow">
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Fall " + new Date(new Date().setFullYear(this.currYear + 3)).getFullYear()}>&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Winter " + new Date(new Date().setFullYear(this.currYear + 4)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Spring " + new Date(new Date().setFullYear(this.currYear + 4)).getFullYear()}
-          >&lt;/CalendarBlock>
-          &lt;CalendarBlock color="#005587"
-            calendarDate={"Summer " + new Date(new Date().setFullYear(this.currYear + 4)).getFullYear()}
-          >&lt;/CalendarBlock>
-        &lt;/div>
-      &lt;/div>
-    );
+    // TODO: get the start year from the user (add a form on the DARs page?)
+    let start_year = new Date().getFullYear();
+
+    if (parsedInput !== null) {
+      start_year = parsedInput.calendar.quarters[0].quarter.year;
+      if (parsedInput.calendar.quarters[0].quarter.name !== "FA") {
+        start_year = start_year - 1;
+      }
+    }
+    let default_calendar = [];
+    let default_courses =["DROP HERE", "DROP HERE", "DROP HERE", "DROP HERE"];
+    for (let row_idx = 0; row_idx &lt; 4; row_idx++) {
+      let fall = {
+        'name' : "Fall",
+        'year' : start_year + row_idx,
+        'courses' : default_courses
+      }
+      let winter = {
+        'name' : "Winter",
+        'year' : start_year + 1 + row_idx,
+        'courses' : default_courses
+      }
+      let spring = {
+        'name' : "Spring",
+        'year' : start_year + 1 + row_idx,
+        'courses' : default_courses
+      }
+      let summer = {
+        'name' : "Summer",
+        'year' : start_year + 1 + row_idx,
+        'courses' : default_courses
+      }
+
+      let default_year = [fall, winter, spring, summer];
+      default_calendar.push(default_year);
+    }
+    
+    if (parsedInput !== null) {
+      const quarter_name_dict = {
+        "FA": "Fall",
+        "WI": "Winter",
+        "SP": "Spring",
+        "SU": "Summer"
+      };
+      const quarter_id_dict = {
+        "FA": 0,
+        "WI": 1,
+        "SP": 2,
+        "SU": 3
+      }
+
+      let json_quarters = parsedInput.calendar.quarters;
+      for (let i = 0; i &lt; json_quarters.length; i++) {
+        const q = json_quarters[i];
+        const year = q.quarter.year;
+        const quarter_name = quarter_name_dict[q.quarter.quarter];
+        const quarter_id = quarter_id_dict[q.quarter.quarter];
+        let courses = ["DROP HERE", "DROP HERE", "DROP HERE", "DROP HERE"];
+        for (let j = 0; j &lt; q.quarter.courses.length; j++) {
+          courses[j] = q.quarter.courses[j].course.name;
+        }
+        const quarter = {
+          'name': quarter_name,
+          'year': year,
+          'courses': courses
+        }
+        let row_num = year - start_year - 2;
+        if (quarter_name === "Fall") {
+          row_num += 1;
+        }
+        console.log(quarter, row_num, quarter_id);
+        default_calendar[row_num][quarter_id] = quarter;
+      }
+      console.log(default_calendar);
+    }
+    return default_calendar;
   }
+
+  const parsed = parse_json();
+
+  const get_row = (row_idx) => {
+    const row = parsed[row_idx];
+    const color_dict = {
+      0: "#005587",
+      1: "#8BB8E8",
+      2: "#FFE9AD",
+      3: "#005587"
+    };
+
+    let rows = []
+    for (const quarter of row) {
+      rows.push(&lt;CalendarBlock color={color_dict[row_idx]}
+        calendarDate = {quarter.name + " " + quarter.year}
+        courses = {quarter.courses}>
+      &lt;/CalendarBlock>)
+    }
+    return &lt;div className="CalendarRow">{rows}&lt;/div>;
+  }
+
+  return (
+    &lt;div>
+      {get_row(0)}
+      {get_row(1)}
+      {get_row(2)}
+      {get_row(3)}
+    &lt;/div>
+  );
 }
 
 export default CalendarList; 
@@ -118,7 +168,7 @@ export default CalendarList;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Fri Nov 04 2022 18:14:08 GMT-0700 (Pacific Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Mon Nov 21 2022 03:34:53 GMT-0800 (Pacific Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

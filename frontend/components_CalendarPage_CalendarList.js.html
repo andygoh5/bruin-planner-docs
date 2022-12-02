@@ -33,120 +33,59 @@
 import React from "react";
 import CalendarBlock from "./CalendarBlock";
 import { useLocation } from "react-router-dom";
+import Login from "../Login";
 
-
-function CalendarList() {
+function CalendarList({ classMappings, startYear, classInfo }) {
   const location = useLocation();
-  const data = location.state;
-
-  const parse_json = () => {
-    let parsedInput = data;
-
-    // TODO: get the start year from the user (add a form on the DARs page?)
-    let start_year = new Date().getFullYear();
-
-    if (parsedInput !== null) {
-      start_year = parsedInput.calendar.quarters[0].quarter.year;
-      if (parsedInput.calendar.quarters[0].quarter.name !== "FA") {
-        start_year = start_year - 1;
-      }
-    }
-    let default_calendar = [];
-    let default_courses =["DROP HERE", "DROP HERE", "DROP HERE", "DROP HERE"];
-    for (let row_idx = 0; row_idx &lt; 4; row_idx++) {
-      let fall = {
-        'name' : "Fall",
-        'year' : start_year + row_idx,
-        'courses' : default_courses
-      }
-      let winter = {
-        'name' : "Winter",
-        'year' : start_year + 1 + row_idx,
-        'courses' : default_courses
-      }
-      let spring = {
-        'name' : "Spring",
-        'year' : start_year + 1 + row_idx,
-        'courses' : default_courses
-      }
-      let summer = {
-        'name' : "Summer",
-        'year' : start_year + 1 + row_idx,
-        'courses' : default_courses
-      }
-
-      let default_year = [fall, winter, spring, summer];
-      default_calendar.push(default_year);
-    }
-    
-    if (parsedInput !== null) {
-      const quarter_name_dict = {
-        "FA": "Fall",
-        "WI": "Winter",
-        "SP": "Spring",
-        "SU": "Summer"
-      };
-      const quarter_id_dict = {
-        "FA": 0,
-        "WI": 1,
-        "SP": 2,
-        "SU": 3
-      }
-
-      let json_quarters = parsedInput.calendar.quarters;
-      for (let i = 0; i &lt; json_quarters.length; i++) {
-        const q = json_quarters[i];
-        const year = q.quarter.year;
-        const quarter_name = quarter_name_dict[q.quarter.quarter];
-        const quarter_id = quarter_id_dict[q.quarter.quarter];
-        let courses = ["DROP HERE", "DROP HERE", "DROP HERE", "DROP HERE"];
-        for (let j = 0; j &lt; q.quarter.courses.length; j++) {
-          courses[j] = q.quarter.courses[j].course.name;
-        }
-        const quarter = {
-          'name': quarter_name,
-          'year': year,
-          'courses': courses
-        }
-        let row_num = year - start_year - 2;
-        if (quarter_name === "Fall") {
-          row_num += 1;
-        }
-        console.log(quarter, row_num, quarter_id);
-        default_calendar[row_num][quarter_id] = quarter;
-      }
-      console.log(default_calendar);
-    }
-    return default_calendar;
-  }
-
-  const parsed = parse_json();
+  const id = location.state ? location.state.id : null;
+  const calendarState = classMappings;
 
   const get_row = (row_idx) => {
-    const row = parsed[row_idx];
     const color_dict = {
       0: "#005587",
       1: "#8BB8E8",
       2: "#FFE9AD",
       3: "#005587"
     };
-
+    let year_offset = [
+      0, 1, 1, 1,
+      1, 2, 2, 2,
+      2, 3, 3, 3,
+      3, 4, 4, 4
+    ];
+    let quarters = ["Fall", "Winter", "Spring", "Summer"];
+    let block_ids = Object.keys(calendarState).slice(1 + 4 * row_idx, 5 + 4 * row_idx);
     let rows = []
-    for (const quarter of row) {
+    for (let i = 0; i &lt; 4; i++) {
       rows.push(&lt;CalendarBlock color={color_dict[row_idx]}
-        calendarDate = {quarter.name + " " + quarter.year}
-        courses = {quarter.courses}>
-      &lt;/CalendarBlock>)
+        blockId={block_ids[i]}
+        blockState={calendarState[block_ids[i]]}
+        calendarDate={quarters[i] + " " + (startYear + year_offset[4 * row_idx + i])}
+        classInfo={classInfo}>
+      &lt;/CalendarBlock>);
     }
     return &lt;div className="CalendarRow">{rows}&lt;/div>;
   }
 
   return (
     &lt;div>
-      {get_row(0)}
-      {get_row(1)}
-      {get_row(2)}
-      {get_row(3)}
+      {id ?
+        &lt;div>
+          {get_row(0)}
+          {get_row(1)}
+          {get_row(2)}
+          {get_row(3)}
+        &lt;/div>
+        :
+        &lt;div>
+          &lt;h1 class="welcome-message">
+            Please sign in again
+          &lt;/h1>
+          &lt;div class="dars-button-container">
+            &lt;Login destination="/dars/upload">&lt;/Login>
+          &lt;/div>
+        &lt;/div>
+      }
     &lt;/div>
   );
 }
@@ -162,13 +101,13 @@ export default CalendarList;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#CalendarBlock">CalendarBlock</a></li><li><a href="global.html#CustomizedButton">CustomizedButton</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#Logout">Logout</a></li><li><a href="global.html#clientId">clientId</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#CalendarBlock">CalendarBlock</a></li><li><a href="global.html#CustomizedButton">CustomizedButton</a></li><li><a href="global.html#DropdownButton">DropdownButton</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#Logout">Logout</a></li><li><a href="global.html#SidebarButton">SidebarButton</a></li><li><a href="global.html#clientId">clientId</a></li><li><a href="global.html#getClasses">getClasses</a></li><li><a href="global.html#json_to_options">json_to_options</a></li><li><a href="global.html#saveAndCheck">saveAndCheck</a></li><li><a href="global.html#sendRequest">sendRequest</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Mon Nov 21 2022 03:34:53 GMT-0800 (Pacific Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.0</a> on Thu Dec 01 2022 16:23:10 GMT-0800 (Pacific Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
